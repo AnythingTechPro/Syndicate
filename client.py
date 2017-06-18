@@ -3,7 +3,7 @@ import threading
 import util
 import main
 
-host, port = '68.119.230.139', 10000
+host, port = '127.0.0.1', 10000
 
 global players
 players = None
