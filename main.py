@@ -4,6 +4,7 @@ import pygame
 import random
 import pyscroll
 import client
+import __builtin__
 from pygame.locals import *
 from PIL import Image
 from pytmx.util_pygame import load_pygame
@@ -31,6 +32,7 @@ class GameLevel(object):
         self.tmx_data = GameUtil.load_map(map_filepath)
         self.map_data = pyscroll.TiledMapData(self.tmx_data)
         self.surfacedata = {}
+        self.camera = GameLevelCamera(self)
 
     def setup(self):
         for x in range(0, self.tmx_data.width):
@@ -52,7 +54,18 @@ class GameLevel(object):
 
     def draw(self, draw_surface):
         for surface, x, y in self.surfacedata.values():
-            draw_surface.blit(surface, [x, y])
+            rect = surface.get_rect()
+            width = rect.width
+            height = rect.height
+
+            draw_surface.blit(surface, [x - self.camera.x * 2, y - self.camera.y * 2])
+
+class GameLevelCamera(object):
+
+    def __init__(self, level):
+        self.level = level
+        self.x = 0
+        self.y = 0
 
 class Delayer(object):
 
@@ -240,6 +253,9 @@ class Player(pygame.sprite.DirtySprite, PlayerAnimator):
         if left:
             self.x -= speed
 
+        level.camera.x = self.x
+        level.camera.y = self.y
+
         # now broadcast a position update for this player
         client.handle_send_position_update(self)
 
@@ -294,6 +310,8 @@ def main():
     global level
     level = GameLevel('assets/Maps/test.tmx')
     level.setup()
+
+    __builtin__.level = level
 
     #global level_layer
     #level_layer = pyscroll.BufferedRenderer(level.map_data, [screen_height, screen_width])
